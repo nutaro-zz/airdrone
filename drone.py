@@ -1,6 +1,6 @@
 import os, uuid
 
-from subprocess import call
+from subprocess import run
 
 
 if os.geteuid() != 0:
@@ -10,14 +10,14 @@ if os.geteuid() != 0:
 log_file = open(f"/var/log/airdrone-{uuid.uuid4()}", 'w+') 
 interface = input("Enter the wireless interface: ")
 
-commands = [["sudo", "-s", "airmon-ng", "check", "kill"],
-            ["sudo", "-s", "ifconfig", interface, "down"],
-            ["sudo", "-s", "iwconfig", interface, "mode", "monitor"],
-            ["sudo", "-s", "ifconfig", interface, "up"],
-            ["sudo", "-s","airodump-ng", "--band", "abg", interface]]
+commands = [["airmon-ng", "check", "kill"],
+            ["ifconfig", interface, "down"],
+            ["iwconfig", interface, "mode", "monitor"],
+            ["ifconfig", interface, "up"],
+            [f"""airodump-ng --band abg --write drone {interface}"""]]
 
 for command in commands:
     print(command)
-    call(command, shell=True, stdout=log_file, stderr=log_file)
+    run(command, shell=True, check=True, stderr=log_file)
 
 log_file.close()
