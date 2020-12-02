@@ -1,17 +1,23 @@
-import os
+import os, uuid
 
-from subprocess import Popen
+from subprocess import call
+
 
 if os.geteuid() != 0:
     print("We must be root")
     raise PermissionError
 
+log_file = open(f"/var/log/airdrone-{uuid.uuid4()}", 'w+') 
 interface = input("Enter the wireless interface: ")
 
-Popen(["airmon-ng", "check", "kill"])
+commands = [["sudo", "-s", "airmon-ng", "check", "kill"],
+            ["sudo", "-s", "ifconfig", interface, "down"],
+            ["sudo", "-s", "iwconfig", interface, "mode", "monitor"],
+            ["sudo", "-s", "ifconfig", interface, "up"],
+            ["sudo", "-s","airodump-ng", "--band", "abg", interface]]
 
-Popen(["ifconfig", interface, "down"])
-Popen(["iwconfig", interface, "mode", "monitor"])
-Popen(["ifconfig", interface, "up"])
+for command in commands:
+    print(command)
+    call(command, shell=True, stdout=log_file, stderr=log_file)
 
-Popen(["airodump-ng", "--band", "abg", interface])
+log_file.close()
