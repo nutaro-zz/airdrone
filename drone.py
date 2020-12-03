@@ -1,23 +1,31 @@
 import os, uuid
+import click
 
 from subprocess import run
 
 
-if os.geteuid() != 0:
-    print("We must be root")
-    raise PermissionError
+@click.command()
+@click.option('--interface', prompt="wireless card")
+def get_packages(interface):
 
-log_file = open(f"/var/log/airdrone-{uuid.uuid4()}", 'w+') 
-interface = input("Enter the wireless interface: ")
+    if os.geteuid() != 0:
+        print("We must be root")
+        raise PermissionError
 
-commands = [["airmon-ng", "check", "kill"],
-            ["ifconfig", interface, "down"],
-            ["iwconfig", interface, "mode", "monitor"],
-            ["ifconfig", interface, "up"],
-            [f"""airodump-ng --band abg --write drone {interface}"""]]
+    log_file = open(f"/var/log/airdrone-{uuid.uuid4()}", 'w+') 
 
-for command in commands:
-    print(command)
-    run(command, shell=True, check=True, stderr=log_file)
+    commands = [["airmon-ng", "check", "kill"],
+                ["ifconfig", interface, "down"],
+                ["iwconfig", interface, "mode", "monitor"],
+                ["ifconfig", interface, "up"],
+                [f"""airodump-ng --band abg --write drone {interface}"""]]
 
-log_file.close()
+    for command in commands:
+        print(command)
+        run(command, shell=True, check=True, stderr=log_file)
+
+    log_file.close()
+
+
+if __name__ == "__main__":
+    
